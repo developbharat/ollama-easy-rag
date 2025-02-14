@@ -1,0 +1,44 @@
+[project]
+name = "ollama-easy-rag"
+version = "0.0.1"
+description = "Simple and quick RAG (Retrieval Augmented Generation) using ollama API."
+authors = [
+    { name = "Jayant Malik", email = "dev.jayantmalik@gmail.com" }
+]
+license = { text = "Apache-2.0" }
+readme = "README.md"
+keywords = ["ollama", "langchain", "ollama-easy-rag", "easy rag", "local rag"]
+requires-python = ">=3.9"
+dependencies = [
+]
+
+[virtualenvs]
+in-project = true
+
+[project.urls]
+Homepage = "https://github.com/developbharat/ollama-easy-rag"
+Changelog = "https://github.com/developbharat/ollama-easy-rag"
+Repository = "https://github.com/developbharat/ollama-easy-rag"
+Documentation = "https://github.com/developbharat/ollama-easy-rag"
+
+[tool.poetry]
+package-mode = true
+
+[tool.mypy]
+files = "src, tests"
+mypy_path = "src"
+namespace_packages = false
+explicit_package_bases = false
+strict = true
+enable_error_code = [
+    "ignore-without-code",
+    "redundant-expr",
+    "truthy-bool",
+]
+exclude = [
+    "tests/",
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
