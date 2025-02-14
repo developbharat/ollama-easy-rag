@@ -1,0 +1,12 @@
+repos:
+  - repo: https://github.com/developbharat/ollama-easy-rag
+    rev: v0.0.1
+    hooks:
+      - id: poetry-check
+      - id: poetry-lock
+      - id: poetry-export
+      - id: poetry-install
+hooks:
+  - id: poetry-export
+    args: [ "-f", "requirements.txt" ]
+    verbose: true
