@@ -6,14 +6,8 @@ on:
 
 jobs:
   test_pypi_release:
-    strategy:
-      fail-fast: true
-      matrix:
-        python-version: [ "3.9", "3.13" ]
-        poetry-version: [ "2.0.0" ]
-        os: [ ubuntu-22.04, macos-latest, windows-latest ]
-
-    runs-on: ${{ matrix.os }}
+    name: Builds Using Poetry and Publishes to PyPI
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
