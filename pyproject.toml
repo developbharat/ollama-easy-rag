@@ -8,8 +8,12 @@ authors = [
 license = { text = "Apache-2.0" }
 readme = "README.md"
 keywords = ["ollama", "langchain", "ollama-easy-rag", "easy rag", "local rag"]
-requires-python = ">=3.9"
+requires-python = ">=3.9,<4.0"
 dependencies = [
+    "ollama (>=0.4.7,<0.5.0)",
+    "lancedb (>=0.19.0,<0.20.0)",
+    "pyarrow (>=19.0.0,<20.0.0)",
+    "semantic-text-splitter (>=0.24.0,<0.25.0)"
 ]
 
 [virtualenvs]
@@ -47,7 +51,7 @@ exclude = [
 pytest = "^8.3.4"
 
 [tool.pytest.ini_options]
-addopts = [ "-ra", "--strict-config", "--strict-markers" ]
+addopts = ["-ra", "--strict-config", "--strict-markers"]
 testpaths = ["tests"]
 markers = [
     "network: mark tests that require internet access",
