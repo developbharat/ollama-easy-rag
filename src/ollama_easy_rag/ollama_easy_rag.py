@@ -1,5 +1,5 @@
 import dataclasses
-from typing import List, Sequence, Iterator, Callable
+from typing import List, Sequence, Iterator, Callable, Union
 
 import lancedb
 import ollama
@@ -89,7 +89,7 @@ class OllamaEasyRag:
         else:
             tbl.add(items)
 
-    def compute_vectors(self, content: str) -> List[float] | Sequence[float]:
+    def compute_vectors(self, content: str) -> Union[List[float], Sequence[float]]:
         """
         Computes vectors for provided query.
         :param content: Content to use for vectorisation
@@ -102,7 +102,7 @@ class OllamaEasyRag:
         )
         return response.embeddings[0]
 
-    def complete(self, prompts: List[ModelPrompt], stream: bool = False) -> str | Iterator[str]:
+    def complete(self, prompts: List[ModelPrompt], stream: bool = False) -> Union[str, Iterator[str]]:
         """
         Answers the provided prompt.
 
@@ -110,7 +110,7 @@ class OllamaEasyRag:
         :param stream: should the response be streamed?
         :return: Answer to the provided prompt.
         """
-        response: ChatResponse | Iterator[ChatResponse] = ollama.chat(
+        response: Union[ChatResponse, Iterator[ChatResponse]] = ollama.chat(
             model=self.ollama_chat_model_name,
             messages=[prompt.serialise() for prompt in prompts],
             stream=stream
@@ -122,7 +122,7 @@ class OllamaEasyRag:
             for chunk in response:
                 yield chunk.message.content
 
-    def search(self, query: str, stream: bool = False) -> str | Iterator[str]:
+    def search(self, query: str, stream: bool = False) -> Union[str, Iterator[str]]:
         """
         1. Perform vector search based for query
         2. Generates the output via AI model using results from step 1 as context.
