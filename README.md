@@ -15,10 +15,10 @@ pip install ollama-easy-rag
 ```python
 from typing import List
 
-from ollama_easy_rag import OllamaEasyRag as OER, ModelPrompt
+from ollama_easy_rag import OllamaEasyRag as OER, ModelPrompt, PromptContext
 
 
-def prepare_prompt(context: str, query: str) -> List[ModelPrompt]:
+def prepare_prompt(context: List[PromptContext], query: str) -> List[ModelPrompt]:
     """
     Prepares prompt based on provided context.
 
@@ -34,7 +34,7 @@ def prepare_prompt(context: str, query: str) -> List[ModelPrompt]:
                             "Speak in a mix of Gandhi tone and conversational style, and make your responses "
                             "emotionally engaging with personal reflection. "
                             "Share your thoughts and insights based on your life experiences."),
-        ModelPrompt(role="user", content=f"Query: {query},  Context: {context}")
+        ModelPrompt(role="user", content=f"Query: {query},  Context: {context[0].content}")
     ]
 
 
