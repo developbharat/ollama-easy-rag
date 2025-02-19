@@ -1,6 +1,6 @@
 [project]
 name = "ollama-easy-rag"
-version = "0.0.1"
+version = "0.0.2"
 description = "Simple and quick RAG (Retrieval Augmented Generation) using ollama API."
 authors = [
     { name = "Jayant Malik", email = "dev.jayantmalik@gmail.com" }
@@ -13,7 +13,6 @@ dependencies = [
     "ollama (>=0.4.7,<0.5.0)",
     "lancedb (>=0.19.0,<0.20.0)",
     "pyarrow (>=19.0.0,<20.0.0)",
-    "semantic-text-splitter (>=0.24.0,<0.25.0)"
 ]
 
 [virtualenvs]
