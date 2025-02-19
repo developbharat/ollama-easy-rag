@@ -113,11 +113,12 @@ class OllamaEasyRag:
 
         # open table
         tbl = self.db.open_table(self.table_name)
+        serialised = [record.serialise() for record in data]
 
         if skip_duplicates:
-            tbl.merge_insert("content").when_matched_update_all().when_not_matched_insert_all().execute(data)
+            tbl.merge_insert("content").when_matched_update_all().when_not_matched_insert_all().execute(serialised)
         else:
-            tbl.add(data)
+            tbl.add(serialised)
 
     def compute_vectors(self, content: str) -> Union[List[float], Sequence[float]]:
         """
