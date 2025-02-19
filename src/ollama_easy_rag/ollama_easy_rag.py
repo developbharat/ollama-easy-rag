@@ -1,10 +1,20 @@
 import dataclasses
-from typing import List, Sequence, Iterator, Callable, Union, Optional
+from typing import List, Sequence, Iterator, Callable, Union, Optional, Tuple
 
 import lancedb
 import ollama
 import pyarrow as pa
 from ollama import EmbedResponse, ChatResponse
+
+
+@dataclasses.dataclass
+class PromptContext:
+    source: str
+    chunk_id: str
+    content: str
+
+    def serialise(self) -> dict:
+        return {"source": self.source, "chunk_id": self.chunk_id, "content": self.content}
 
 
 @dataclasses.dataclass
@@ -53,17 +63,19 @@ class OllamaEasyRag:
     vector_cols_count: int = 1024
     ollama_chat_model_name: str = "qwen2.5:3b"
     ollama_vectorise_model_name: str = "bge-m3"
-    create_prompts: Callable[[str, str], List[ModelPrompt]] = None
+    create_prompts: Callable[[List[PromptContext], str], List[ModelPrompt]] = None
     allow_insert_duplicate_content: bool = False
 
-    def __init__(self, create_prompts: Callable[[str, str], List[ModelPrompt]],
+    def __init__(self, create_prompts: Callable[[List[PromptContext], str], List[ModelPrompt]],
                  db_path: str = "data/sample-lancedb",
+                 table_name: str = "sample_data_table",
                  vector_cols_count: int = 1024,
                  ollama_chat_model_name: str = "qwen2.5:3b",
                  ollama_vectorise_model_name: str = "bge-m3",
                  allow_insert_duplicate_content: bool = False):
         if create_prompts is None:
             raise Exception("create_prompt param is required and found missing from OllamaEasyRag(...)")
+        self.table_name = table_name
         self.db = lancedb.connect(db_path)
         self.vector_cols_count = vector_cols_count
         self.ollama_chat_model_name = ollama_chat_model_name
@@ -84,8 +96,8 @@ class OllamaEasyRag:
             [
                 pa.field("vectors", pa.list_(pa.float32(), list_size=self.vector_cols_count)),
                 pa.field("content", pa.string()),
-                pa.field("source", pa.string(), nullable=True),
-                pa.field("chunk_id", pa.string(), nullable=True)
+                pa.field("source", pa.string()),
+                pa.field("chunk_id", pa.string())
             ])
         self.db.create_table(self.table_name, schema=schema, exist_ok=True)
 
@@ -140,11 +152,36 @@ class OllamaEasyRag:
             for chunk in response:
                 yield chunk.message.content
 
-    def search(self, query: str, stream: bool = False) -> SearchResult:
+    @staticmethod
+    def __prepare_context(table: lancedb.table.Table,
+                          search_vectors: List[float] | Sequence[float],
+                          search_limit: int) -> Tuple[List[PromptContext], List[SearchSource]]:
+        context = table.search(search_vectors).limit(search_limit).select(["content", "source", "chunk_id"]).to_list()
+
+        # Prepare context and sources
+        sources: List[SearchSource] = []
+        contexts: List[PromptContext] = []
+        for record in context:
+            content = record["content"]
+            source = record["source"]
+            chunk_id = record["chunk_id"]
+
+            # Add context
+            contexts.append(PromptContext(content=content,
+                                          source=source if source is not None else "",
+                                          chunk_id=chunk_id if chunk_id is not None else ""))
+            # Add source
+            sources.append(SearchSource(source=source if source is not None else "",
+                                        chunk_id=chunk_id if chunk_id is not None else ""))
+
+        return contexts, sources
+
+    def search(self, query: str, stream: bool = False, search_limit: int = 5) -> SearchResult:
         """
         1. Perform vector search based for query
         2. Generates the output via AI model using results from step 1 as context.
 
+        :param search_limit: No of records to search in database for context.
         :param stream: Should the response be streamed or plain text response must be returned?
         :param query: Ask a question that needs to be answered based on RAG
         :return: Answer to the query post RAG
@@ -153,22 +190,10 @@ class OllamaEasyRag:
         # compute vectors and search in database
         query_vectors = self.compute_vectors(query)
         table = self.db.open_table(self.table_name)
-        context = table.search(query_vectors).limit(5).select(["content", "source", "chunk_id"]).to_list()
-        context = "\n".join([record["content"] for record in context])
+        context, sources = self.__prepare_context(table=table, search_vectors=query_vectors, search_limit=search_limit)
 
         # Generate model output based on context
         result = self.complete(prompts=self.create_prompts(context, query), stream=stream)
-
-        # Return search results
-        sources = []
-        for record in context:
-            source = record["source"]
-            chunk_id = record["chunk_id"]
-            if source is None and chunk_id is None:
-                continue
-
-            sources.append(SearchSource(source=source if source is not None else "",
-                                        chunk_id=chunk_id if chunk_id is not None else ""))
 
         if stream:
             return SearchResult(prediction=result, sources=sources)
