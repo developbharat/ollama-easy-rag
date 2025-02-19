@@ -154,7 +154,7 @@ class OllamaEasyRag:
 
     @staticmethod
     def __prepare_context(table: lancedb.table.Table,
-                          search_vectors: List[float] | Sequence[float],
+                          search_vectors: Union[List[float], Sequence[float]],
                           search_limit: int) -> Tuple[List[PromptContext], List[SearchSource]]:
         context = table.search(search_vectors).limit(search_limit).select(["content", "source", "chunk_id"]).to_list()
 
