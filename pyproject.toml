@@ -1,6 +1,6 @@
 [project]
 name = "ollama-easy-rag"
-version = "0.0.3"
+version = "0.0.4"
 description = "Simple and quick RAG (Retrieval Augmented Generation) using ollama API."
 authors = [
     { name = "Jayant Malik", email = "dev.jayantmalik@gmail.com" }
